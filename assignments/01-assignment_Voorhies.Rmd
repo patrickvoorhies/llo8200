@@ -4,15 +4,98 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+library(tidyverse)
+library(plotly)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Question 1: Hello World
 ```{r}
 print("Hello World")
+```
+
+```{r}
+## Load in the data
+load("college.Rdata")
+```
+
+# Question 2: Summarizing College Data
+## Question 2-1: Comparing earnings by Selective vs. Non Selective Schools
+
+```{r}
+
+## What's the average earnings for very selective schools?
+sc%>%filter(adm_rate<.1)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
+
+## And for not very selective schools?
+sc%>%filter(adm_rate>.3)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
+
+```
+
+## Question 2-2: Are schools with high SAT scores smaller or larger?
+
+```{r}
+
+
+## What's the average SAT score?
+sc%>%summarize(sat_avg=mean(sat_avg,na.rm=TRUE))
+
+## What's the average number of undergraduates for schools with above average SAT scores?
+sc%>%filter(sat_avg>1200.1)%>%summarize(mean_ugds=mean(ugds,na.rm=TRUE))
+
+## What's the average number of undergraduates for schools with below average SAT scores?
+sc%>%filter(sat_avg<1200.1)%>%summarize(mean_ugds=mean(ugds,na.rm=TRUE))
+
+```
+## Question 2-3: Debt and Cost of Attendance
+
+```{r}
+
+## Plot Cost and Debt
+gg<-ggplot(data=sc, aes(x=costt4_a,
+                         y=debt_mdn,
+                         text=debt_mdn))
+
+## Add Points
+gg<-gg+geom_point(alpha=.5,size=.5)
+
+## Add labels
+gg<-gg+xlab("Cost")+ylab("Average Debt")
+
+gg
+```
+
+This is not completely surprising, as this is positively skewed.  I would imagine the reason why debt is low for some of the colleges at $50k+ are due to more robust scholarships and student aid.
+
+## Question 2-4: Plots for Cost and Debt by Control
+
+```{r}
+
+## Plot Cost by Control
+gg<-ggplot(data=sc, aes(x=costt4_a,
+                         y=control,
+                         text=control))
+
+## Add Points
+gg<-gg+geom_point(alpha=1,size=1)
+
+## Add labels
+gg<-gg+xlab("Average Cost")+ylab("Control")
+
+gg
+
+## Plot Debt by Control
+gg<-ggplot(data=sc, aes(x=debt_mdn,
+                         y=control,
+                         text=control))
+
+## Add Points
+gg<-gg+geom_point(alpha=1,size=1)
+
+## Add labels
+gg<-gg+xlab("Debt")+ylab("Control")
+
+gg
+
 ```
 
