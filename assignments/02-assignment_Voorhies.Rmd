@@ -1,0 +1,90 @@
+---
+title: "02-assignment_Voorhies"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(plotly)
+library(Metrics)
+```
+
+```{r}
+#Loading PD Data
+load("pd.Rdata")
+view("pd.Rdata")
+
+## Full explanation of data in codebook
+load("pd_lab_explain.Rdata")
+
+#view Explanation
+View(lab_explain)
+```
+
+## Question 1:  Calculate Mean of Outcome
+```{r}
+## What's the average outcome?
+pd%>%summarize(mean_homeown_rate=mean(homeown_rate,na.rm=TRUE))
+```
+
+## Question 2: Use Mean as a Predictor
+
+```{r}
+##Unconditional Average as a Predictor
+
+pd<-pd%>%mutate(mean_homeown_rate=mean(homeown_rate,na.rm=TRUE))
+```
+
+## Question 3: Summary of Error
+
+```{r}
+## RMSE will be used to know how far off we are if we are to use the Unconditional Average as a predictor.
+
+rmse_uncond_mean<-rmse(pd$homeown_rate,pd$mean_homeown_rate)
+
+rmse_uncond_mean
+```
+
+## Question 4: Mean of Outcome at levels of a predictor variable
+
+```{r}
+#We are trying to predict home ownership.  I will use College Education as a possible predictor
+
+## Create a variable for quartiles of college education
+pd<-pd%>%mutate(coll_grad_level=ntile(coll_grad_pc,4))
+
+pd%>%select(county,coll_grad_pc,coll_grad_level)%>%View()
+
+table(pd$coll_grad_level)
+
+```
+
+## Question 5:  Create a table for each county's guess of home ownership
+
+```{r}
+
+pd<-pd%>%group_by(coll_grad_level)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  mutate(pred_homeown_college=mean(homeown_rate))%>%
+  ## Ungroup
+  ungroup()%>% 
+  #Rank by prediction, with ties sorted randomly
+  mutate(pred_homeown_college_rank=rank(pred_homeown_college,ties.method="random"))
+
+pd%>%select(county,coll_grad_pc,coll_grad_level,pred_homeown_college)%>%View()
+ 
+```
+
+## Question 6:  Summary of Error
+
+```{r}
+#We will calculate our summary of errors using Root Mean of Standard Errors to understand how far off we are.
+
+rmse_mean_two<-rmse(pd$homeown_rate,pd$pred_homeown_college)
+rmse_mean_two
+
+```
+
