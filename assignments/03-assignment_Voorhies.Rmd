@@ -1,0 +1,91 @@
+---
+title: "03-assignment_Voorhies.Rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(forcats)
+library(RColorBrewer)
+library(knitr)
+```
+
+
+```{r}
+load("attrition.Rdata")
+```
+
+
+## Question 1: Monthly Income Distribution
+
+```{r}
+# Here, we will plot monthly income on the X axis with a width of 1000, frequency is on the y axis
+gg<-ggplot(at,aes(x=MonthlyIncome))
+gg<-gg+geom_histogram(binwidth = 1000)
+gg
+```
+
+
+## Question 2: Average Income by Education
+
+```{r}
+
+## Summarize income by education
+at_sum<-at%>%
+  group_by(Education)%>%
+  summarize(MonthlyIncome_avg=mean(MonthlyIncome))
+
+## Get the results
+at_sum
+
+## Plot with Education as x axis, Monthly Income as y, Gold
+gg<-ggplot(at_sum,aes(x=Education,y=MonthlyIncome_avg))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity", fill="gold", color="black")
+## Print
+gg
+
+```
+
+```{r}
+## Summarize income by education AND gender
+at_sum<-at%>%
+  group_by(Education,Gender)%>%
+  summarize(MonthlyIncome_avg=mean(MonthlyIncome))
+
+## Get the results
+at_sum
+
+
+#Plot the table
+gg<-ggplot(at_sum,aes(x=Education, MonthlyIncome_avg,y=MonthlyIncome_avg,color=Gender))
+gg<-gg+geom_bar(stat="identity",aes(fill=Gender),position="dodge")
+#gg<-gg+ylab("Pr(Attrition)")+xlab("Frequency of Travel")
+gg
+```
+
+#Question 4: Average levels of monthly income by field of education, gender, and job level
+```{r}
+## Using Facets
+
+at_sum<-at%>%
+  group_by(JobLevel,Education,MonthlyIncome,Gender)%>%
+  summarize(MonthlyIncome_avg=mean(MonthlyIncome))%>%
+  ungroup()%>%
+  arrange(JobLevel)
+
+at_sum
+
+gg<-ggplot(at_sum,aes(x=Education,MonthlyIncome_avg,y=MonthlyIncome_avg))
+gg<-gg+geom_bar(stat="identity",aes(fill=Gender),position="dodge")
+gg<-gg+facet_wrap(~Gender+JobLevel,ncol=4)
+
+gg<-gg+ylab("Average Monthly Income")+xlab("Education & Income")
+gg<-gg+theme(axis.text.x = element_text(angle = 60, hjust = 1))
+gg<-gg+ggtitle("Monthly Income by Gender and Job Level")
+gg
+
+```
+
