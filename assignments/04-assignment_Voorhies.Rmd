@@ -1,0 +1,125 @@
+---
+title: "04-assignment_Voorhies"
+author: "Patrick Voorhies"
+date: "9/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1: Twitter Account Information
+
+```{r}
+
+consumerKey='GwqXudaNOg9n9k7wW6dzzl4VI'
+consumerSecret='fdK3FoXAlV3SrBmApCG5pWIEIKiD8dIuzRHD3GRCHxxbPBvkyi'
+access_Token='125097171-6hgjiDsOMsOIAbZgk7gOXMENCP41v3q4XSlAG2yE'
+access_Secret='PZhBAS7Vftl192U71nHCkY0kzE5GB0iR7ozzWRYsTNmxP'
+requestURL='https://api.twitter.com/oauth/request_token'
+accessURL='https://api.twitter.com/oauth/access_token'
+authURL='https://api.twitter.com/oauth/authorize'
+
+## Install the needed packages...
+library(arules)
+library(rtweet)
+library(twitteR)
+library(ROAuth)
+library(jsonlite)
+library(rjson)
+library(tokenizers)
+library(tidyverse)
+library(tm)
+library(wordcloud)
+
+```
+
+## Question 2: Let's find the top 5 words associated with Trump tweets for this week
+ 
+```{r}
+setup_twitter_oauth(consumerKey,consumerSecret,access_Token,access_Secret)
+# Below is the function that scours twitter for a particular hash tag, in our case "Trump."
+# n is the number of tweets to be collected, in our case 5 from 9/15/19
+Search<-twitteR::searchTwitter("#Trump",n=5,since="2019-09-15")
+(Search_DF <- twListToDF(Search))
+# If you wish to store the tweets in a csv file ... 
+TransactionTweetsFile = "tweets.csv"
+(Search_DF$text[1])
+## Start the file
+Trans <- file(TransactionTweetsFile)
+## Tokenize tweets into a list of words 
+Tokens<-tokenizers::tokenize_words(Search_DF$text[1],stopwords = stopwords::stopwords("en"), 
+          lowercase = TRUE,  strip_punct = TRUE, strip_numeric = TRUE,simplify = TRUE)
+## Write squished tokens
+cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
+close(Trans)
+## Append remaining lists of tokens into file
+## NOTE - a list of tokens is the set of words from a Tweet
+Trans <- file(TransactionTweetsFile, open = "a")
+tokenList = Tokens
+for(i in 2:nrow(Search_DF)){
+  Tokens<-tokenize_words(Search_DF$text[i],stopwords = stopwords::stopwords("en"), 
+            lowercase = TRUE,  strip_punct = TRUE, simplify = TRUE)
+  cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
+  tokenList <- c(tokenList,  unlist(str_squish(Tokens)))
+}
+close(Trans)
+cor <- Corpus(VectorSource(tokenList))
+tdm <- TermDocumentMatrix(cor)
+m <- as.matrix(tdm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+#Show us the top words for this week
+print(d)
+```
+
+## Question 3:  Creaing a Wordcloud about my favorite team: LSU
+### We will create a wordcloud about my favorite college team, LSU.  Vandy is 2nd, of course.
+###Geaux Tigers & Go Dores
+
+```{r}
+# We will create a wordcloud about my favorite college team, LSU.  Vandy is 2nd, of course.
+##Geaux Tigers & Go Dores
+
+setup_twitter_oauth(consumerKey,consumerSecret,access_Token,access_Secret)
+
+# Below is the function that scours twitter for a particular hash tag.
+# n is the number of tweets to be collected
+Search<-twitteR::searchTwitter("#LSU",n=50,since="2019-09-09")
+(Search_DF <- twListToDF(Search))
+# If you wish to store the tweets in a csv file ... 
+TransactionTweetsFile = "tweets1.csv"
+(Search_DF$text[1])
+## Start the file
+Trans <- file(TransactionTweetsFile)
+## Tokenize tweets into a list of words 
+Tokens<-tokenizers::tokenize_words(Search_DF$text[1],stopwords = stopwords::stopwords("en"), 
+          lowercase = TRUE,  strip_punct = TRUE, strip_numeric = TRUE,simplify = TRUE)
+## Write squished tokens
+cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
+close(Trans)
+## Append remaining lists of tokens into file
+## NOTE - a list of tokens is the set of words from a Tweet
+Trans <- file(TransactionTweetsFile, open = "a")
+tokenList = Tokens
+for(i in 2:nrow(Search_DF)){
+  Tokens<-tokenize_words(Search_DF$text[i],stopwords = stopwords::stopwords("en"), 
+            lowercase = TRUE,  strip_punct = TRUE, simplify = TRUE)
+  cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
+  tokenList <- c(tokenList,  unlist(str_squish(Tokens)))
+}
+close(Trans)
+
+# We will create a wordcloud about #LSU, but first transform list of words into a 
+# TermDocumentMatrix
+cor <- Corpus(VectorSource(tokenList))
+tdm <- TermDocumentMatrix(cor)
+m <- as.matrix(tdm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+## NOTE:  d contains the words d$word AND frequencies d$freq
+wordcloud(d$word,d$freq, colors=c("red","green","blue","orange","black","purple", "seagreen") , random.color = TRUE, min.freq = 3)
+
+```
+
