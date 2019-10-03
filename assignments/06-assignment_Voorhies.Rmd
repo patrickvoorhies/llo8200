@@ -1,0 +1,109 @@
+---
+title: "06-assignment_Voorhies"
+author: "Patrick Voorhies"
+date: "10/2/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1: Obtain NYC Flights data tables
+
+```{r}
+
+#Copying lines 35-60 as instructed to obtain the data
+
+# Will need: nycflights13 RSQLite, 
+
+#Get libraries
+library(tidyverse)
+library(nycflights13)
+library(RSQLite)
+
+# Data sources from NYC flights
+data(flights)
+data(airlines)
+data(airports)
+data(weather)
+data(planes)
+
+#Open database connection
+con <- dbConnect(RSQLite::SQLite(), ":memory:")
+
+```
+
+## Question 2: Create a data fram from a SQL pull from flights that took off in May
+
+```{r}
+
+#Write flights tables to database 
+
+dbWriteTable(con,
+             "flights", 
+             as.data.frame(flights))
+
+# Generare the SQL statement for the database
+
+req_text<-"Select * from flights
+          WHERE origin=='JFK' 
+          AND month=='5'
+          "           
+         
+
+#Send query through connection
+req<-dbSendQuery(con,req_text)
+
+#Generate dataframe from results
+req_df<-dbFetch(req,n=-1)
+
+#Clear 
+dbClearResult(req)
+
+# View the results by viewing the dataframe
+dim(req_df)
+
+head(req_df,20)
+
+
+```
+
+## Question 3: Create a data frame for flights that took off on time from Neward at temperatures < 40 degrees F
+
+```{r}
+
+#Getting the weather table
+
+dbWriteTable(con,
+             "weather", 
+             as.data.frame(weather))
+
+#Writing the query
+
+req1_text<-"SELECT f.dep_delay, f.origin, w.temp 
+            FROM flights f 
+            JOIN weather w 
+             WHERE f.origin=w.origin AND f.year=w.year AND f.month=w.month AND f.day=w.day AND f.hour=w.hour AND f.origin='EWR' AND f.dep_delay<10 AND w.temp<40
+            "
+
+#Sending the query and displaying the results
+
+req1<-dbSendQuery(con,req1_text)
+
+req1_df<-dbFetch(req1,n=-1)
+
+dbClearResult(req1)
+
+head(req1_df)
+
+```
+
+```{r}
+
+#Filtering flights flown by United, my favorite airline!
+
+filter(flights, carrier=='UA')
+
+```
+
