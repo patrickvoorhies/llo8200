@@ -1,7 +1,7 @@
 ---
 title: "07-assignment_Voorhies"
 author: "Patrick Voorhies"
-date: "9/18/2019"
+date: "10/14/2019"
 output: html_document
 ---
 
@@ -9,117 +9,109 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Question 1: Twitter Account Information
+## Question 1: Load the packages and the data
 
 ```{r}
 
-consumerKey='GwqXudaNOg9n9k7wW6dzzl4VI'
-consumerSecret='fdK3FoXAlV3SrBmApCG5pWIEIKiD8dIuzRHD3GRCHxxbPBvkyi'
-access_Token='125097171-6hgjiDsOMsOIAbZgk7gOXMENCP41v3q4XSlAG2yE'
-access_Secret='PZhBAS7Vftl192U71nHCkY0kzE5GB0iR7ozzWRYsTNmxP'
-requestURL='https://api.twitter.com/oauth/request_token'
-accessURL='https://api.twitter.com/oauth/access_token'
-authURL='https://api.twitter.com/oauth/authorize'
-
-## Install the needed packages...
-library(arules)
-library(rtweet)
-library(twitteR)
-library(ROAuth)
-library(jsonlite)
-library(rjson)
-library(tokenizers)
+#Load the packages
+rm(list = ls())
 library(tidyverse)
-library(tm)
-library(wordcloud)
+library(stats)
+library(flexclust)
+library(ggplot2)
+library(LICORS)
+library(knitr)
+library(modelr)
+library(readxl)
+
+#Load the dataset
+
+
+ec <- read_xlsx("turkiyestudentevaluationgeneric.xlsx")
+ec
 
 ```
 
-## Question 2: Let's find the top 5 words associated with Trump tweets for this week
- 
-```{r}
-setup_twitter_oauth(consumerKey,consumerSecret,access_Token,access_Secret)
-# Below is the function that scours twitter for a particular hash tag, in our case "Trump."
-# n is the number of tweets to be collected, in our case 5 from 9/15/19
-Search<-twitteR::searchTwitter("#Trump",n=5,since="2019-09-15")
-(Search_DF <- twListToDF(Search))
-# If you wish to store the tweets in a csv file ... 
-TransactionTweetsFile = "tweets.csv"
-(Search_DF$text[1])
-## Start the file
-Trans <- file(TransactionTweetsFile)
-## Tokenize tweets into a list of words 
-Tokens<-tokenizers::tokenize_words(Search_DF$text[1],stopwords = stopwords::stopwords("en"), 
-          lowercase = TRUE,  strip_punct = TRUE, strip_numeric = TRUE,simplify = TRUE)
-## Write squished tokens
-cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
-close(Trans)
-## Append remaining lists of tokens into file
-## NOTE - a list of tokens is the set of words from a Tweet
-Trans <- file(TransactionTweetsFile, open = "a")
-tokenList = Tokens
-for(i in 2:nrow(Search_DF)){
-  Tokens<-tokenize_words(Search_DF$text[i],stopwords = stopwords::stopwords("en"), 
-            lowercase = TRUE,  strip_punct = TRUE, simplify = TRUE)
-  cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
-  tokenList <- c(tokenList,  unlist(str_squish(Tokens)))
-}
-close(Trans)
-cor <- Corpus(VectorSource(tokenList))
-tdm <- TermDocumentMatrix(cor)
-m <- as.matrix(tdm)
-v <- sort(rowSums(m),decreasing=TRUE)
-d <- data.frame(word = names(v),freq=v)
-#Show us the top words for this week
-print(d)
-```
 
-## Question 3:  Creaing a Wordcloud about my favorite team: LSU
-### We will create a wordcloud about my favorite college team, LSU.  Vandy is 2nd, of course.
-###Geaux Tigers & Go Dores
+## Question 2: Select 10 related variables for analysis
 
 ```{r}
-# We will create a wordcloud about my favorite college team, LSU.  Vandy is 2nd, of course.
-##Geaux Tigers & Go Dores
+#Questions 13-28 have to do with the instructor, so I will load these.
 
-setup_twitter_oauth(consumerKey,consumerSecret,access_Token,access_Secret)
+ec1 <- ec %>% 
+       select("Q13","Q14","Q15","Q16","Q17","Q18","Q19","Q20","Q21","Q22","Q23","Q24","Q25","Q26","Q27", "Q28")
+```
 
-# Below is the function that scours twitter for a particular hash tag.
-# n is the number of tweets to be collected
-Search<-twitteR::searchTwitter("#LSU",n=50,since="2019-09-09")
-(Search_DF <- twListToDF(Search))
-# If you wish to store the tweets in a csv file ... 
-TransactionTweetsFile = "tweets1.csv"
-(Search_DF$text[1])
-## Start the file
-Trans <- file(TransactionTweetsFile)
-## Tokenize tweets into a list of words 
-Tokens<-tokenizers::tokenize_words(Search_DF$text[1],stopwords = stopwords::stopwords("en"), 
-          lowercase = TRUE,  strip_punct = TRUE, strip_numeric = TRUE,simplify = TRUE)
-## Write squished tokens
-cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
-close(Trans)
-## Append remaining lists of tokens into file
-## NOTE - a list of tokens is the set of words from a Tweet
-Trans <- file(TransactionTweetsFile, open = "a")
-tokenList = Tokens
-for(i in 2:nrow(Search_DF)){
-  Tokens<-tokenize_words(Search_DF$text[i],stopwords = stopwords::stopwords("en"), 
-            lowercase = TRUE,  strip_punct = TRUE, simplify = TRUE)
-  cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
-  tokenList <- c(tokenList,  unlist(str_squish(Tokens)))
-}
-close(Trans)
+## Question 3: Run the clustering algorithm to identify 3 clusters
 
-# We will create a wordcloud about #LSU, but first transform list of words into a 
-# TermDocumentMatrix
-cor <- Corpus(VectorSource(tokenList))
-tdm <- TermDocumentMatrix(cor)
-m <- as.matrix(tdm)
-v <- sort(rowSums(m),decreasing=TRUE)
-d <- data.frame(word = names(v),freq=v)
-## NOTE:  d contains the words d$word AND frequencies d$freq
-wordcloud(d$word,d$freq, colors=c("red","green","blue","orange","black","purple", "seagreen") , random.color = TRUE, min.freq = 3)
+```{r}
+#Cluster the data into 3 clusters
+eccluster<-kmeanspp(ec, k = 3, start = "random", iter.max = 1000, nstart = 5)
+
+#Make a table from the clusters
+table(eccluster$cluster)
+```
+### Of the 3 clusters, there are 2359, 2227, and 1234 records per respective group
+
+## Question 4: Summarize the clusters
+```{r}
+# Add predictions
+ec1$cluster <- eccluster$cluster
+
+# Examine relationship of cluster assignment to chars.
+mycols <- c("Group 1", "Group 2", "Group 3")
+
+#Proportion of a variable across all three clusters 
+pt <- prop.table(table(ec1$cluster, eccluster$cluster), margin = 1)
+
+# Sorts into proportionate clusters by questions  (had to rely on some team help on this one!)
+pt <- pt * 100
+pt <- round(pt, 1)
+pt
+
+pt <- prop.table(table(ec1$cluster, eccluster$cluster), margin = 1)
+
+rownames(pt) <- mycols
+pt <- pt * 100
+pt <- round(pt, 1)
+pt
+
+prop.table(table(ec1$cluster, ec1$Q13), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q14), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q15), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q16), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q17), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q18), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q19), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q20), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q21), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q22), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q23), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q24), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q25), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q26), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q27), margin = 1) %>% kable()
+prop.table(table(ec1$cluster, ec1$Q28), margin = 1) %>% kable()
+
+var.means <- colMeans(ec1)
+var.means <- var.means[-(length(var.means))]
+
+# Generate a summary by cluster
+sum1 <- ec1 %>% group_by(cluster) %>% summarize_all(funs(mean), na.rm = TRUE)
+sum1
+
+sum2 <- gather(sum1, -cluster, key = variable, value = value)
+sum2
+sum_total <- ec1 %>% summarize_all(funs(mean))
+
+sum_total <- gather(sum_total, key = variable, value = overall_mean)
+sum2 <- left_join(sum2, sum_total, by = "variable")
+
+
+sum2 <- sum2 %>% group_by(variable) %>% mutate(varmeans = mean(value))
+
+sum2 <- sum2 %>% group_by(variable) %>% mutate(varmeans = mean(value))
 
 ```
 
+The clustering above helps us understand which questions may have a better rating in relation to course instruction.  In this case, it would appear that the means of each cluster are not that dispered, meaning that no one question was that great of an indicator of course content (e.g., the instructor did comparatively well in instruction as it related to explanation of course content, assignments, and fairness).
