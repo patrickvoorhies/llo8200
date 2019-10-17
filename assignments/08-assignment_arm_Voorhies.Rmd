@@ -1,0 +1,192 @@
+---
+title: "08-assignment_arm_Voorhies"
+author: "Patrick Voorhies"
+date: "10/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1: Collect 100 Tweets on a Hashtag
+
+```{r}
+#Twitter Developer Keys
+
+consumerKey='GwqXudaNOg9n9k7wW6dzzl4VI'
+consumerSecret='fdK3FoXAlV3SrBmApCG5pWIEIKiD8dIuzRHD3GRCHxxbPBvkyi'
+access_Token='125097171-6hgjiDsOMsOIAbZgk7gOXMENCP41v3q4XSlAG2yE'
+access_Secret='PZhBAS7Vftl192U71nHCkY0kzE5GB0iR7ozzWRYsTNmxP'
+requestURL='https://api.twitter.com/oauth/request_token'
+accessURL='https://api.twitter.com/oauth/access_token'
+authURL='https://api.twitter.com/oauth/authorize'
+
+### Install the needed packages...
+
+library(arules)
+library(rtweet)
+library(twitteR)
+library(ROAuth)
+library(jsonlite)
+library(streamR)
+library(rjson)
+library(tokenizers)
+library(tidyverse)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(syuzhet)
+library(stringr)
+library(arulesViz)
+library(wordcloud)
+library(tm)
+
+# Collecting Tweets
+
+##############  Using twittR ##########################################################
+#I am using #LSU as my hashtag.  I am collecting 100 tweets since 10/1
+
+setup_twitter_oauth(consumerKey,consumerSecret,access_Token,access_Secret)
+Search<-twitteR::searchTwitter("#LSU",n=100,since="2019-10-01")
+(Search_DF <- twListToDF(Search))
+TransactionTweetsFile = "LSU.csv"
+(Search_DF$text[1])
+
+## Start the file
+Trans <- file(TransactionTweetsFile)
+
+## Tokenize to words 
+Tokens<-tokenizers::tokenize_words(Search_DF$text[1],stopwords = stopwords::stopwords("en"), 
+          lowercase = TRUE,  strip_punct = TRUE, strip_numeric = TRUE,simplify = TRUE)
+
+## Write squished tokens
+cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
+close(Trans)
+
+## Append remaining lists of tokens into file
+## Recall - a list of tokens is the set of words from a Tweet
+Trans <- file(TransactionTweetsFile, open = "a")
+for(i in 2:nrow(Search_DF)){
+  Tokens<-tokenize_words(Search_DF$text[i],stopwords = stopwords::stopwords("en"), 
+            lowercase = TRUE,  strip_punct = TRUE, simplify = TRUE)
+  cat(unlist(str_squish(Tokens)), "\n", file=Trans, sep=",")
+}
+close(Trans)
+
+# Tweets as Transactions
+
+#In this section we will read in the tweets stored in the CSV file using the (Association Rule Mining) ARM library. Each tweet will be considered a basket of words. We can use ARM to determine associations of words in tweets. 
+
+#{r baskets, include=TRUE}
+######### Read in the tweet transactions
+TweetTrans <- read.transactions(TransactionTweetsFile,
+                                rm.duplicates = FALSE, 
+                                format = "basket",
+                                sep=","
+                               )
+#inspect(TweetTrans)
+## See the words that occur the most
+Sample_Trans <- sample(TweetTrans, 50)
+summary(Sample_Trans)
+## Read the transactions data into a dataframe
+TweetDF <- read.csv(TransactionTweetsFile, header = FALSE, sep = ",")
+head(TweetDF)
+(str(TweetDF))
+## Cleaning the text data
+
+#Note that cleaning the text data is very important in text mining applications. Tweets are especially "messy". We will remove "rt", "http", etc and any other strings of no importance.
+
+#{r clean,  include=TRUE}
+## Convert all columns to char 
+TweetDF<-TweetDF %>%
+  mutate_all(as.character)
+(str(TweetDF))
+
+# We can now remove certain words that aren't relevant (though some are prevelant in the twitter-verse *eyeroll*)
+
+TweetDF[TweetDF == "t.co"] <- ""
+TweetDF[TweetDF == "rt"] <- ""
+TweetDF[TweetDF == "http"] <- ""
+TweetDF[TweetDF == "https"] <- ""
+TweetDF[TweetDF == "bkubena"] <- ""
+TweetDF[TweetDF == "hornets"] <- ""
+TweetDF[TweetDF == "jacquesdoucet"] <- ""
+TweetDF[TweetDF == "sugardaddy"] <- ""
+TweetDF[TweetDF == "nudes"] <- ""
+TweetDF[TweetDF == "na"] <- ""
+TweetDF[TweetDF == "rabalaisadv"] <- ""
+TweetDF[TweetDF == "rt"] <- ""
+
+
+## Clean with grepl - every row in each column
+MyDF<-NULL
+for (i in 1:ncol(TweetDF)){
+  MyList=c() # each list is a column of logicals ...
+  MyList=c(MyList,grepl("[[:digit:]]", TweetDF[[i]]))
+  MyDF<-cbind(MyDF,MyList)  ## create a logical DF
+
+
+  ## TRUE is when a cell has a word that contains digits
+}
+## For all TRUE, replace with blank
+TweetDF[MyDF] <- ""
+(head(TweetDF,10))
+# Now we save the dataframe using the write table command 
+write.table(TweetDF, file = "UpdatedLSU.csv", col.names = FALSE, 
+            row.names = FALSE, sep = ",")
+TweetTrans <- read.transactions("UpdatedLSU.csv", sep =",", 
+            format("basket"),  rm.duplicates = TRUE)
+#inspect(TweetTrans)
+
+```
+
+## Question 3: Wordcloud from the Tweet
+
+```{r}
+
+#Getting the data from the CSV file
+speech<-read_csv("UpdatedLSU.csv")
+
+#Trying several things to get rid of those pesky NA/no values, without luck... interested to see what other folks did
+apply(speech,2,max,na.rm=TRUE);
+apply(na.omit(speech),2,max);
+na.omit(speech)
+speechnona <- drop_na(speech)
+
+#Building the word cloud
+cor <- Corpus(VectorSource(speech))
+tdm <- TermDocumentMatrix(cor)
+m <- as.matrix(tdm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+## NOTE:  d contains the words d$word AND frequencies d$freq
+wordcloud(d$word,d$freq, colors=c("red","green","blue","orange","black","purple", "seagreen") , random.color = TRUE, min.freq = 3)
+
+```
+
+#Question 4:  Rules and Visualization
+```{r}
+# So that you do not have an enormous amount of rules, you can thresholds for
+# support, confidence and lift ... also minlength for the rules. 
+TweetTrans_rules = arules::apriori(speech, 
+            parameter = list(support=.025, confidence=.75, minlen=3))
+#inspect(TweetTrans_rules[1:20])
+#For some reason, inspect code was erroring.  Since I could generate the visualization without it, I will troubleshoot in class
+
+## sorted
+
+SortedRules_conf <- sort(TweetTrans_rules, by="confidence", decreasing=TRUE)
+#inspect(SortedRules_conf[1:20])
+SortedRules_sup <- sort(TweetTrans_rules, by="support", decreasing=TRUE)
+#inspect(SortedRules_sup[1:20])
+
+```
+
+
+```{r graph, include=TRUE}
+plot (SortedRules_sup[1:50],method="graph",interactive=TRUE,shading="confidence") 
+plot (SortedRules_conf[1:50],method="graph",interactive=TRUE,shading="confidence") 
+```
+
+
