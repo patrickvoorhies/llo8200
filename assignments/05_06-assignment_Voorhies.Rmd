@@ -1,0 +1,169 @@
+---
+title: "05_06-assignment_Voorhies"
+author: "Patrick Voorhies"
+date: "10/31/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1: Scatterplots
+
+```{r}
+#Install the needed packages
+
+rm(list=ls())
+library(tidyverse)
+library(forcats)
+library(ModelMetrics)
+library(modelr)
+
+#Load the data
+load("els.RData")
+
+#Summarize Math Scores, the dependent variable
+
+els%>%summarize(mean(bynels2m,na.rm=TRUE))
+gg<-ggplot(els,aes(x=bynels2m))
+gg<-gg+geom_histogram()
+gg
+
+gg<-ggplot(els,aes(x=bynels2m))
+gg<-gg+geom_density()
+gg
+
+
+#Plotting a simple bivariate regression
+mod1<-lm(bynels2m~byses1,data=els) #outcome on left (math score), predictor on right (SES)
+summary(mod1)
+confint(mod1)
+g1<-ggplot(els, aes(x=byses1,y=bynels2m))+ #specify data and x and y
+           geom_point(shape=1)+ #specify points
+           geom_smooth(method=lm) #ask for lm line
+g1
+
+```
+
+## Question 2: Adjust the scale of variables
+
+```{r}
+
+# set the intercept of x and y axis at (0,0)
+g1 + expand_limits(x=0, y=0)
+# change the axis limits
+g1 + expand_limits(x=c(0,3), y=c(10, 90))
+
+```
+
+## Question 3: Add a line to best fit your graphic
+```{r}
+
+#Plotting the lm line
+mod1<-lm(bynels2m~byses1,data=els) #outcome on left (math score), predictor on right (SES)
+summary(mod1)
+confint(mod1)
+g1<-ggplot(els, aes(x=byses1,y=bynels2m))+ #specify data and x and y
+           geom_point(shape=1)+ #specify points
+           geom_smooth(method=lm) #ask for lm line
+g1
+
+#Plotting the loess line
+mod1<-lm(bynels2m~byses1,data=els) #outcome on left (math score), predictor on right (SES)
+summary(mod1)
+confint(mod1)
+g1<-ggplot(els, aes(x=byses1,y=bynels2m))+ #specify data and x and y
+           geom_point(shape=1)+ #specify points
+           geom_smooth(method=loess) #ask for loess line
+g1
+
+```
+
+## Question 4: Clean up the labeling for presentation
+
+```{r}
+#Plotting a simple bivariate regression
+mod1<-lm(bynels2m~byses1,data=els) #outcome on left (math score), predictor on right (SES)
+summary(mod1)
+confint(mod1)
+g1<-ggplot(els, aes(x=byses1,y=bynels2m))+ #specify data and x and y
+           geom_point(shape=1)+ #specify points
+           geom_smooth(method=lm) #ask for lm line
+
+g1 + scale_x_continuous(name="SocioEconomic Status") +
+  scale_y_continuous(name="Math Scores")+ 
+  geom_point(color = "#800080", size = 1, shape = 23)
+
+```
+
+## Question 5: Describing the graphic above
+
+There is a positively correlated relationship between Math Score and SocioEconomic Status.  As a test taker's SocioEconomic Status increases, we can predict that in most cases, math scores increase.
+
+## Question 6: Create a regression that predicts reading score as a function of SES plus an additional covariate using the training data
+
+```{r}
+# Bring in new data
+
+
+#Create the plot bringing in another covariate, Parental Ed
+
+
+g2<-ggplot(data=filter(els,is.na(bypared)==FALSE),
+            aes(x=byses1,y=bynels2m,
+                color=as.factor(bypared) #setting the color option
+                ))
+## Let's make the dots smaller for readability
+g2<-g2+geom_point(size=.25)
+## Changing the Legend
+g2<-g2+theme(legend.position="bottom"  )#, legend.title = 
+              # element_blank())
+g2<-g2+ylab("Test Scores")+xlab("Socio Economic Status")
+g2 <- g2+ scale_color_discrete(name="Parental Ed")+
+ geom_smooth(method=lm) #ask for lm lines for the range and relationship
+ 
+g2
+
+#Transforming the SES scale from -1 to 1 to a percentage
+
+els<-els%>%mutate(byses_p=percent_rank(byses1)*100)
+els%>%summarize(mean(byses_p,na.rm=TRUE))
+
+g3<-ggplot(data=filter(els,is.na(bypared)==FALSE),
+            aes(x=byses1,y=bynels2m,
+                color=as.factor(bypared) #setting the color option
+                ))
+## Let's make the dots smaller for readability
+g3<-g2+geom_point(size=.25)
+## Changing the Legend
+g3<-g2+theme(legend.position="bottom"  )#, legend.title = 
+              # element_blank())
+g3<-g3+ylab("Test Scores")+xlab("Socio Economic Status")
+g3 <- g3+ scale_color_discrete(name="Parental Ed")+
+ geom_smooth(method=lm) #ask for lm lines for the range and relationship
+ 
+g3
+
+#Getting the regression line for prediction
+mod3<-lm(bynels2m~byses_p+
+         as.factor(bypared),
+         data=els
+         );summary(mod3)
+
+```
+
+```{r}
+#Let's predict test score with an average SES and Parent Ed of 8
+
+34.653393  + 0.216707 * 8
+
+```
+
+## Question 7: Report RMSE
+
+```{r}
+rmse_3<-modelr::rmse(mod3,els)
+rmse_3
+```
+
