@@ -1,0 +1,125 @@
+---
+title: "08_09-Voorhies"
+author: "Patrick Voorhies"
+date: "11/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Load Libraries
+library(tidyverse)
+library(knitr)
+library(modelr)
+library(caret)
+library(forcats)
+
+#Load Data
+mydata = read.csv("training.csv")
+
+```
+
+# Question 1:  Proportions of Lemons
+
+```{r}
+#What is the proportion that is a bad buy?
+
+prop.table(table(mydata$IsBadBuy))
+           
+```
+
+# Question 2:  Lemons by Make
+
+```{r}
+#What is the proportion of Lemons by Make?
+
+
+prop.table(table(mydata$Make,mydata$IsBadBuy),margin=1)
+
+```
+
+# Question 3: Probability of a Lemon
+
+```{r}
+mod1<-lm(IsBadBuy~Make,data=mydata)
+mod1
+
+mod3<-lm(IsBadBuy~Make+
+         as.factor(VehicleAge),
+         data=mydata
+         );
+summary(mod3)
+```
+
+# Question 4: Make predictions from the linear model
+
+### Is a Lexus with an age of 3 years to be predicted as a bad buy?
+
+```{r}
+0.07217 + 0.09459 * 3
+
+```
+On average, 35.5% of the time it would no longer be considered a good buy.
+
+# Question 5: Probability with Logistic Regression
+```{r}
+#Logisitic model
+
+logit_mod<-glm(IsBadBuy~
+             Make+
+             Color+
+             Nationality,
+             data=mydata,
+            na.action=na.exclude,
+            family=binomial(link="logit"),
+               y=TRUE)
+
+summary(logit_mod)
+
+```
+
+# Question 6: Predictions from the logit model
+
+```{r}
+
+
+mydata<-mydata%>%
+  mutate(pred_logit=predict(logit_mod,type="response"))
+
+#Conversion to Binary
+
+mydata%>%mutate(pred_logit_out=ifelse(pred_logit>.45,1,0))->mydata
+
+mydata<-mydata%>%
+    mutate(pred_logit_out=as.factor(pred_logit_out))
+
+mydata<-mydata%>%
+    mutate(IsBadBuy=as.factor(IsBadBuy))
+
+```
+
+# Question 7: Confusion Matrix
+
+```{r}
+caret::confusionMatrix(data=as.factor(as.character(mydata$pred_logit_out)), reference=as.factor(as.character(mydata$IsBadBuy)))
+
+```
+
+# Question 8: Graph of Probability of Bad Buy by Make
+
+```{r}
+
+#white flag, I'm stumped :( 
+
+```
+
+# Question 9: Table Summary of Probability of Bad Buy By Make
+
+```{r}
+
+#white flag, I'm stumped :( 
+```
+
