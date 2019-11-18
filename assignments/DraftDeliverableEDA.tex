@@ -1,0 +1,664 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Initial Data Exploration},
+            pdfauthor={Patrick Voorhies},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Initial Data Exploration}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Patrick Voorhies}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{11/13/2019}
+
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Load Libraries}
+\KeywordTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## -- Attaching packages ----------------------------------------- tidyverse 1.2.1 --
+\end{verbatim}
+
+\begin{verbatim}
+## v ggplot2 3.2.1     v purrr   0.3.2
+## v tibble  2.1.3     v dplyr   0.8.2
+## v tidyr   0.8.3     v stringr 1.4.0
+## v readr   1.3.1     v forcats 0.4.0
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts -------------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(knitr)}
+\KeywordTok{library}\NormalTok{(ggplot2)}
+\KeywordTok{library}\NormalTok{(tidyverse)}
+
+\CommentTok{#Load Data}
+\NormalTok{mydata =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"survey_results_public.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(mydata)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Respondent   
+##  Min.   :    1  
+##  1st Qu.:22222  
+##  Median :44442  
+##  Mean   :44442  
+##  3rd Qu.:66662  
+##  Max.   :88883  
+##                 
+##                                                                          MainBranch   
+##  I am a developer by profession                                               :65679  
+##  I am a student who is learning to code                                       :10189  
+##  I am not primarily a developer, but I write code sometimes as part of my work: 7539  
+##  I code primarily as a hobby                                                  : 3340  
+##  I used to be a developer by profession, but no longer am                     : 1584  
+##  NA's                                                                         :  552  
+##                                                                                       
+##  Hobbyist                                                OpenSourcer   
+##  No :17626   Less than once a month but more than once per year:20561  
+##  Yes:71257   Less than once per year                           :24972  
+##              Never                                             :32295  
+##              Once a month or more often                        :11055  
+##                                                                        
+##                                                                        
+##                                                                        
+##                                                                            OpenSource   
+##  OSS is, on average, of HIGHER quality than proprietary / closed source software:36556  
+##  OSS is, on average, of LOWER quality than proprietary / closed source software : 8759  
+##  The quality of OSS and closed source software is about the same                :41527  
+##  NA's                                                                           : 2041  
+##                                                                                         
+##                                                                                         
+##                                                                                         
+##                                                 Employment   
+##  Employed full-time                                  :64440  
+##  Employed part-time                                  : 4469  
+##  Independent contractor, freelancer, or self-employed: 8511  
+##  Not employed, and not looking for work              : 3803  
+##  Not employed, but looking for work                  : 5600  
+##  Retired                                             :  358  
+##  NA's                                                : 1702  
+##            Country                Student     
+##  United States :20949   No            :65816  
+##  India         : 9061   Yes, full-time:15769  
+##  Germany       : 5866   Yes, part-time: 5429  
+##  United Kingdom: 5737   NA's          : 1869  
+##  Canada        : 3395                         
+##  (Other)       :43743                         
+##  NA's          :  132                         
+##                                                                                EdLevel     
+##  Bachelor’s degree (BA, BS, B.Eng., etc.)                                          :39134  
+##  Master’s degree (MA, MS, M.Eng., MBA, etc.)                                       :19569  
+##  Some college/university study without earning a degree                            :10502  
+##  Secondary school (e.g. American high school, German Realschule or Gymnasium, etc.): 8642  
+##  Associate degree                                                                  : 2938  
+##  (Other)                                                                           : 5605  
+##  NA's                                                                              : 2493  
+##                                                                UndergradMajor 
+##  Computer science, computer engineering, or software engineering      :47214  
+##  Another engineering discipline (ex. civil, electrical, mechanical)   : 6222  
+##  Information systems, information technology, or system administration: 5253  
+##  Web development or web design                                        : 3422  
+##  A natural science (ex. biology, chemistry, physics)                  : 3232  
+##  (Other)                                                              :10271  
+##  NA's                                                                 :13269  
+##                                                                                                                                                                                                                EduOther    
+##  Taught yourself a new language, framework, or tool without taking a formal course                                                                                                                                 : 6699  
+##  Taken an online course in programming or software development (e.g. a MOOC);Taught yourself a new language, framework, or tool without taking a formal course                                                     : 6012  
+##  Taught yourself a new language, framework, or tool without taking a formal course;Contributed to open source software                                                                                             : 3810  
+##  Taken an online course in programming or software development (e.g. a MOOC);Received on-the-job training in software development;Taught yourself a new language, framework, or tool without taking a formal course: 3104  
+##  Taken an online course in programming or software development (e.g. a MOOC)                                                                                                                                       : 2820  
+##  (Other)                                                                                                                                                                                                           :61815  
+##  NA's                                                                                                                                                                                                              : 4623  
+##                      OrgSize     
+##  20 to 99 employees      :15199  
+##  100 to 499 employees    :12834  
+##  10,000 or more employees:10147  
+##  1,000 to 4,999 employees: 7520  
+##  2-9 employees           : 7393  
+##  (Other)                 :18698  
+##  NA's                    :17092  
+##                                                            DevType     
+##  Developer, full-stack                                         : 8433  
+##  Developer, back-end                                           : 4913  
+##  Developer, back-end;Developer, front-end;Developer, full-stack: 2399  
+##  Developer, front-end                                          : 2212  
+##  Developer, mobile                                             : 2172  
+##  (Other)                                                       :61206  
+##  NA's                                                          : 7548  
+##    YearsCode       Age1stCode     YearsCodePro  
+##  5      : 7047   15     : 8681   2      : 7959  
+##  10     : 6777   16     : 8633   3      : 7793  
+##  6      : 6179   14     : 8452   5      : 6416  
+##  4      : 5729   18     : 7945   4      : 6306  
+##  8      : 5361   12     : 7735   6      : 4518  
+##  (Other):56845   (Other):46188   (Other):41339  
+##  NA's   :  945   NA's   : 1249   NA's   :14552  
+##                               CareerSat    
+##  Neither satisfied nor dissatisfied: 7252  
+##  Slightly dissatisfied             : 7670  
+##  Slightly satisfied                :25018  
+##  Very dissatisfied                 : 3734  
+##  Very satisfied                    :29173  
+##  NA's                              :16036  
+##                                            
+##                                 JobSat                        MgrIdiot    
+##  Neither satisfied nor dissatisfied: 8720   I don't have a manager: 2092  
+##  Slightly dissatisfied             :10752   Not at all confident  : 9516  
+##  Slightly satisfied                :24207   Somewhat confident    :25207  
+##  Very dissatisfied                 : 4857   Very confident        :24344  
+##  Very satisfied                    :22452   NA's                  :27724  
+##  NA's                              :17895                                 
+##                                                                           
+##      MgrMoney                       MgrWant     
+##  No      :31346   I am already a manager: 3008  
+##  Not sure:11982   No                    :20383  
+##  Yes     :17829   Not sure              :22276  
+##  NA's    :27726   Yes                   :15565  
+##                   NA's                  :27651  
+##                                                 
+##                                                 
+##                                                          JobSeek     
+##  I am actively looking for a job                             :12215  
+##  I am not interested in new job opportunities                :21080  
+##  I’m not actively looking, but I am open to new opportunities:47260  
+##  NA's                                                        : 8328  
+##                                                                      
+##                                                                      
+##                                                                      
+##                                                LastHireDate  
+##  1-2 years ago                                       :21365  
+##  3-4 years ago                                       :11597  
+##  I've never had a job                                : 3028  
+##  Less than a year ago                                :25844  
+##  More than 4 years ago                               :14594  
+##  NA - I am an independent contractor or self employed: 3426  
+##  NA's                                                : 9029  
+##                                                                                                                                              LastInt     
+##  Interview with people in peer roles;Interview with people in senior / management roles                                                          :12383  
+##  Interview with people in senior / management roles                                                                                              : 9638  
+##  Write any code;Interview with people in peer roles;Interview with people in senior / management roles                                           : 3433  
+##  Write any code;Write code by hand (e.g., on a whiteboard);Interview with people in peer roles;Interview with people in senior / management roles: 2873  
+##  Write any code;Complete a take-home project;Interview with people in peer roles;Interview with people in senior / management roles              : 2705  
+##  (Other)                                                                                                                                         :36123  
+##  NA's                                                                                                                                            :21728  
+##  FizzBuzz    
+##  No  :60873  
+##  Yes :10471  
+##  NA's:17539  
+##              
+##              
+##              
+##              
+##                                                                                                                                               JobFactors   
+##  Languages, frameworks, and other technologies I'd be working with;Office environment or company culture;Opportunities for professional development: 4992  
+##  Languages, frameworks, and other technologies I'd be working with;Office environment or company culture;Flex time or a flexible schedule          : 4937  
+##  Languages, frameworks, and other technologies I'd be working with;Remote work options;Flex time or a flexible schedule                            : 4710  
+##  Office environment or company culture;Opportunities for professional development;Flex time or a flexible schedule                                 : 3321  
+##  Languages, frameworks, and other technologies I'd be working with;Opportunities for professional development;Flex time or a flexible schedule     : 3248  
+##  (Other)                                                                                                                                           :58163  
+##  NA's                                                                                                                                              : 9512  
+##                                                                        ResumeUpdate  
+##  I had a negative experience or interaction at work                          : 6272  
+##  I heard about a job opportunity (from a recruiter, online job posting, etc.):11327  
+##  I was preparing for a job search                                            :33309  
+##  My job status changed (promotion, new job, etc.)                            :13546  
+##  Re-entry into the workforce                                                 : 1437  
+##  Something else changed (education, award, media, etc.)                      :11986  
+##  NA's                                                                        :11006  
+##  CurrencySymbol                CurrencyDesc     CompTotal        
+##  USD    :19490   United States dollar:19490   Min.   :0.000e+00  
+##  EUR    :15386   European Euro       :15386   1st Qu.:2.000e+04  
+##  INR    : 6690   Indian rupee        : 6690   Median :6.200e+04  
+##  GBP    : 4903   Pound sterling      : 4903   Mean   :5.519e+11  
+##  CAD    : 2680   Canadian dollar     : 2680   3rd Qu.:1.200e+05  
+##  (Other):22243   (Other)             :22243   Max.   :1.000e+16  
+##  NA's   :17491   NA's                :17491   NA's   :32938      
+##     CompFreq     ConvertedComp      WorkWeekHrs     
+##  Monthly:29057   Min.   :      0   Min.   :   1.00  
+##  Weekly : 2706   1st Qu.:  25778   1st Qu.:  40.00  
+##  Yearly :31505   Median :  57287   Median :  40.00  
+##  NA's   :25615   Mean   : 127111   Mean   :  42.13  
+##                  3rd Qu.: 100000   3rd Qu.:  44.75  
+##                  Max.   :2000000   Max.   :4850.00  
+##                  NA's   :33060     NA's   :24380    
+##                                                                                          WorkPlan    
+##  There is a schedule and/or spec (made by me or by a colleague), and I follow it very closely:13552  
+##  There is a schedule and/or spec (made by me or by a colleague), and my work somewhat aligns :34476  
+##  There's no schedule or spec; I work on what seems most important or urgent                  :20886  
+##  NA's                                                                                        :19969  
+##                                                                                                      
+##                                                                                                      
+##                                                                                                      
+##                                                                                                 WorkChallenge  
+##  Being tasked with non-development work;Distracting work environment;Meetings                          : 2318  
+##  Being tasked with non-development work;Meetings;Not enough people for the workload                    : 1741  
+##  Being tasked with non-development work;Distracting work environment;Not enough people for the workload: 1511  
+##  Distracting work environment;Meetings;Not enough people for the workload                              : 1472  
+##  Not enough people for the workload                                                                    : 1420  
+##  (Other)                                                                                               :59679  
+##  NA's                                                                                                  :20742  
+##                                                    WorkRemote   
+##  Less than once per month / Never                       :30220  
+##  A few days each month                                  :17242  
+##  All or almost all the time (I'm full-time remote)      : 8465  
+##  Less than half the time, but at least one day each week: 6320  
+##  It's complicated                                       : 3675  
+##  (Other)                                                : 4362  
+##  NA's                                                   :18599  
+##                                            WorkLoc     
+##  Home                                          :23278  
+##  Office                                        :40592  
+##  Other place, such as a coworking space or cafe: 6185  
+##  NA's                                          :18828  
+##                                                        
+##                                                        
+##                                                        
+##                     ImpSyn     
+##  A little above average:32374  
+##  A little below average: 5289  
+##  Average               :17176  
+##  Far above average     :15399  
+##  Far below average     : 1541  
+##  NA's                  :17104  
+##                                
+##                                     CodeRev        CodeRevHrs   
+##  No                                     :16627   Min.   : 0.00  
+##  Yes, because I see value in code review:48424   1st Qu.: 2.00  
+##  Yes, because I was told to do so       : 5339   Median : 4.00  
+##  NA's                                   :18493   Mean   : 5.08  
+##                                                  3rd Qu.: 6.00  
+##                                                  Max.   :99.00  
+##                                                  NA's   :39093  
+##                                                                    UnitTests    
+##  No, and I'm glad we don't                                              : 2784  
+##  No, but I think we should                                              :20835  
+##  Yes, it's not part of our process but the developers do it on their own:12828  
+##  Yes, it's part of our process                                          :26221  
+##  NA's                                                                   :26215  
+##                                                                                 
+##                                                                                 
+##                                                                                                     PurchaseHow   
+##  Developers and management have nearly equal input into purchasing new technology                         :20424  
+##  Developers typically have the most influence on purchasing new technology                                :12483  
+##  Not sure                                                                                                 :15305  
+##  The CTO, CIO, or other management purchase new technology typically without the involvement of developers:12896  
+##  NA's                                                                                                     :27775  
+##                                                                                                                   
+##                                                                                                                   
+##                            PurchaseWhat  
+##  I have a great deal of influence:11116  
+##  I have little or no influence   :26676  
+##  I have some influence           :24237  
+##  NA's                            :26854  
+##                                          
+##                                          
+##                                          
+##                              LanguageWorkedWith
+##  HTML/CSS;JavaScript;PHP;SQL          : 1483   
+##  C#;HTML/CSS;JavaScript;SQL           : 1414   
+##  HTML/CSS;JavaScript                  : 1247   
+##  C#;HTML/CSS;JavaScript;SQL;TypeScript:  990   
+##  Java                                 :  934   
+##  (Other)                              :81501   
+##  NA's                                 : 1314   
+##                     LanguageDesireNextYear
+##  Python                        : 1236     
+##  HTML/CSS;JavaScript           :  697     
+##  HTML/CSS;JavaScript;TypeScript:  648     
+##  C#                            :  607     
+##  Java                          :  584     
+##  (Other)                       :80316     
+##  NA's                          : 4795     
+##                   DatabaseWorkedWith          DatabaseDesireNextYear
+##  MySQL                     : 5556    PostgreSQL          : 3539     
+##  Microsoft SQL Server      : 5164    Microsoft SQL Server: 3290     
+##  PostgreSQL                : 2614    MySQL               : 3184     
+##  SQLite                    : 2027    MongoDB             : 2250     
+##  Microsoft SQL Server;MySQL: 1868    SQLite              : 1506     
+##  (Other)                   :58797    (Other)             :55378     
+##  NA's                      :12857    NA's                :19736     
+##                PlatformWorkedWith   PlatformDesireNextYear
+##  Windows                : 7031    Linux        : 3280     
+##  Linux;Windows          : 3329    Windows      : 2967     
+##  Linux                  : 3298    Linux;Windows: 1696     
+##  Android                : 1961    Android      : 1509     
+##  Microsoft Azure;Windows: 1198    Docker;Linux : 1100     
+##  (Other)                :63897    (Other)      :66891     
+##  NA's                   : 8169    NA's         :11440     
+##       WebFrameWorkedWith WebFrameDesireNextYear
+##  jQuery        : 4171    React.js: 3744        
+##  ASP.NET;jQuery: 2963    ASP.NET : 2107        
+##  ASP.NET       : 2921    Spring  : 1705        
+##  React.js      : 2353    Vue.js  : 1682        
+##  Spring        : 2224    jQuery  : 1676        
+##  (Other)       :50390    (Other) :52030        
+##  NA's          :23861    NA's    :25939        
+##               MiscTechWorkedWith          MiscTechDesireNextYear
+##  Node.js               :10571    Node.js             : 6913     
+##  .NET                  : 5006    .NET;.NET Core      : 2804     
+##  .NET;.NET Core        : 4513    Node.js;React Native: 2570     
+##  .NET;.NET Core;Node.js: 2291    TensorFlow          : 1474     
+##  Node.js;React Native  : 1696    .NET                : 1422     
+##  (Other)               :35509    (Other)             :49328     
+##  NA's                  :29297    NA's                :24372     
+##                                       DevEnviron            OpSys      
+##  Visual Studio Code                        : 5036   BSD        :  124  
+##  Visual Studio;Visual Studio Code          : 3840   Linux-based:22472  
+##  Notepad++;Visual Studio;Visual Studio Code: 3248   MacOS      :23541  
+##  Vim                                       : 2224   Windows    :41714  
+##  Notepad++;Visual Studio                   : 1968   NA's       : 1032  
+##  (Other)                                   :71001                      
+##  NA's                                      : 1566                      
+##                                                                  Containers   
+##  I do not use containers                                              :39327  
+##  Development;Testing;Production                                       : 7731  
+##  Development;Testing;Production;Outside of work, for personal projects: 6835  
+##  Development                                                          : 6202  
+##  Outside of work, for personal projects                               : 6123  
+##  (Other)                                                              :19148  
+##  NA's                                                                 : 3517  
+##                                                  BlockchainOrg  
+##  Accepting Bitcoin or other coins and tokens as payments:  994  
+##  Implementing cryptocurrency-based products             : 1906  
+##  Implementing our own cryptocurrency                    :  623  
+##  Non-currency applications of blockchain                : 6106  
+##  Not at all                                             :38546  
+##  NA's                                                   :40708  
+##                                                                 
+##                                                                 BlockchainIs  
+##  A passing fad                                                        :10085  
+##  An irresponsible use of resources                                    : 9364  
+##  Useful across many domains and could change many aspects of our lives:17596  
+##  Useful for decentralized currency (i.e., Bitcoin)                    : 7341  
+##  Useful for immutable record keeping outside of currency              :15779  
+##  NA's                                                                 :28718  
+##                                                                               
+##  BetterLife                                       ITperson    
+##  No  :31331   Also Yes                                :12313  
+##  Yes :54938   Fortunately, someone else has that title: 6639  
+##  NA's: 2614   SIGH                                    :21819  
+##               Yes                                     :46370  
+##               NA's                                    : 1742  
+##                                                               
+##                                                               
+##    OffOn         SocialMedia                      Extraversion  
+##  No   : 7227   Reddit  :14374   In real life (in person):52860  
+##  What?:11696   YouTube :13830   Neither                 : 9507  
+##  Yes  :67740   WhatsApp:13347   Online                  :24938  
+##  NA's : 2220   Facebook:13178   NA's                    : 1578  
+##                Twitter :11398                                   
+##                (Other) :18310                                   
+##                NA's    : 4446                                   
+##        ScreenName               SOVisit1st   
+##  Handle     : 4001   I don't remember:10383  
+##  Login      : 8659   2010            :10271  
+##  Screen Name: 2021   2008            : 9516  
+##  UserID     : 6836   2012            : 8687  
+##  Username   :58969   2011            : 6669  
+##  NA's       : 8397   (Other)         :38351  
+##                      NA's            : 5006  
+##                                              SOVisitFreq   
+##  A few times per month or weekly                   :11162  
+##  A few times per week                              :19990  
+##  Daily or almost daily                             :26827  
+##  I have never visited Stack Overflow (before today):  560  
+##  Less than once per month or monthly               : 2957  
+##  Multiple times per day                            :26767  
+##  NA's                                              :  620  
+##                                                                                                                           SOVisitTo    
+##  Find answers to specific questions                                                                                            :33842  
+##  Find answers to specific questions;Learn how to do things I didn’t necessarily look for                                       :15416  
+##  Find answers to specific questions;Contribute to a library of information                                                     : 6955  
+##  Find answers to specific questions;Learn how to do things I didn’t necessarily look for;Contribute to a library of information: 4265  
+##  Find answers to specific questions;Learn how to do things I didn’t necessarily look for;Pass the time / relax                 : 3467  
+##  (Other)                                                                                                                       :24141  
+##  NA's                                                                                                                          :  797  
+##                       SOFindAnswer  
+##  1-2 times per week         :24231  
+##  3-5 times per week         :22928  
+##  6-10 times per week        :12867  
+##  Less than once per week    :12678  
+##  More than 10 times per week:15112  
+##  NA's                       : 1067  
+##                                     
+##                                  SOTimeSaved          SOHowMuchTime  
+##  Stack Overflow was much faster        :45330   0-10 minutes :15497  
+##  Stack Overflow was slightly faster    :21342   11-30 minutes:27872  
+##  The other resource was much faster    :  973   31-60 minutes:13636  
+##  The other resource was slightly faster: 1670   60+ minutes  :11373  
+##  They were about the same              :17029   NA's         :20505  
+##  NA's                                  : 2539                        
+##                                                                      
+##                      SOAccount    
+##  No                       : 8327  
+##  Not sure / can't remember: 4309  
+##  Yes                      :75192  
+##  NA's                     : 1055  
+##                                   
+##                                   
+##                                   
+##                                               SOPartFreq   
+##  A few times per month or weekly                   :14094  
+##  A few times per week                              : 7040  
+##  Daily or almost daily                             : 3695  
+##  I have never participated in Q&A on Stack Overflow:17287  
+##  Less than once per month or monthly               :30440  
+##  Multiple times per day                            : 2136  
+##  NA's                                              :14191  
+##                                                                               SOJobs     
+##  No, I didn't know that Stack Overflow had a job board                           :14534  
+##  No, I knew that Stack Overflow had a job board but have never used or visited it:32275  
+##  Yes                                                                             :41257  
+##  NA's                                                                            :  817  
+##                                                                                          
+##                                                                                          
+##                                                                                          
+##                                                                 EntTeams    
+##  No, and I don't know what those are                                :48129  
+##  No, I've heard of them, but I am not part of a private Q&A instance:36637  
+##  Yes                                                                : 3075  
+##  NA's                                                               : 1042  
+##                                                                             
+##                                                                             
+##                                                                             
+##              SOComm     
+##  Neutral        :17900  
+##  No, not at all : 6447  
+##  No, not really :19858  
+##  Not sure       : 1172  
+##  Yes, definitely:15302  
+##  Yes, somewhat  :27452  
+##  NA's           :  752  
+##                                                  WelcomeChange  
+##  A lot less welcome now than last year                  : 2599  
+##  A lot more welcome now than last year                  : 4808  
+##  Just as welcome now as I felt last year                :62661  
+##  Not applicable - I did not use Stack Overflow last year: 2675  
+##  Somewhat less welcome now than last year               : 4259  
+##  Somewhat more welcome now than last year               : 8853  
+##  NA's                                                   : 3028  
+##                                                                                                                                                                            SONewContent  
+##  Tech articles written by other developers;Industry news about technologies you're interested in;Tech meetups or events in your area;Courses on technologies you're interested in:16026  
+##  Tech articles written by other developers                                                                                                                                       : 6768  
+##  Tech articles written by other developers;Courses on technologies you're interested in                                                                                          : 6176  
+##  Tech articles written by other developers;Industry news about technologies you're interested in;Courses on technologies you're interested in                                    : 5593  
+##  Tech articles written by other developers;Industry news about technologies you're interested in                                                                                 : 5441  
+##  (Other)                                                                                                                                                                         :29556  
+##  NA's                                                                                                                                                                            :19323  
+##       Age       
+##  Min.   : 1.00  
+##  1st Qu.:24.00  
+##  Median :29.00  
+##  Mean   :30.34  
+##  3rd Qu.:35.00  
+##  Max.   :99.00  
+##  NA's   :9673   
+##                                                      Gender     
+##  Man                                                    :77919  
+##  Woman                                                  : 6344  
+##  Non-binary, genderqueer, or gender non-conforming      :  597  
+##  Man;Non-binary, genderqueer, or gender non-conforming  :  181  
+##  Woman;Non-binary, genderqueer, or gender non-conforming:  163  
+##  (Other)                                                :  202  
+##  NA's                                                   : 3477  
+##   Trans                                  Sexuality    
+##  No  :82576   Straight / Heterosexual         :70155  
+##  Yes : 1031   Bisexual                        : 3440  
+##  NA's: 5276   Gay or Lesbian                  : 1798  
+##               Bisexual;Straight / Heterosexual:  494  
+##               Bisexual;Gay or Lesbian         :  114  
+##               (Other)                         :  146  
+##               NA's                            :12736  
+##                         Ethnicity     Dependents  
+##  White or of European descent:50929   No  :50727  
+##  South Asian                 : 8373   Yes :32332  
+##  East Asian                  : 3510   NA's: 5824  
+##  Hispanic or Latino/Latina   : 3474               
+##  Middle Eastern              : 2580               
+##  (Other)                     : 7802               
+##  NA's                        :12215               
+##                 SurveyLength                        SurveyEase   
+##  Appropriate in length:57858   Difficult                 : 1697  
+##  Too long             :27316   Easy                      :58613  
+##  Too short            : 1810   Neither easy nor difficult:26771  
+##  NA's                 : 1899   NA's                      : 1802  
+##                                                                  
+##                                                                  
+## 
+\end{verbatim}
+
+
+\end{document}
