@@ -185,8 +185,13 @@ SortedRules_sup <- sort(TweetTrans_rules, by="support", decreasing=TRUE)
 
 
 ```{r graph, include=TRUE}
+<<<<<<< HEAD
 plot (SortedRules_sup[1:10],method="graph",interactive=FALSE,shading="confidence") 
 plot (SortedRules_conf[1:10],method="graph",interactive=FALSE,shading="confidence") 
+=======
+plot (SortedRules_sup[1:50],method="graph",interactive=TRUE,shading="confidence") 
+plot (SortedRules_conf[1:50],method="graph",interactive=TRUE,shading="confidence") 
+>>>>>>> 1434cf38885eba19382dca9724feb2bc99d5e67c
 ```
 
 
