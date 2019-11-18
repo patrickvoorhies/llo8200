@@ -1,0 +1,145 @@
+---
+title: "Initial Data Exploration"
+author: "Patrick Voorhies"
+date: "11/2019..."
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#Load Libraries
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+
+#Load Data
+mydata = read.csv("survey_results_public.csv")
+```
+
+
+```{r}
+summary(mydata)
+
+```
+## Graph the Categorical Variables
+
+```{r}
+#Work Location
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = WorkLoc))
+
+#Work Remote
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = WorkRemote))
+
+#Work Location
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = WorkLoc))
+
+#Reasons why you might update your resume
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = ResumeUpdate))
+
+
+#Has programming led to a better life?
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = BetterLife))
+
+#Describe your employment status
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = Employment))
+
+#Describe your career satisfaction
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = CareerSat))
+
+#Describe your job seeking status
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = JobSeek))
+
+#Describe your job satisfaction
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = JobSat))
+
+#Describe your manager's competency
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = MgrIdiot))
+
+#Do you believe you need to be a manager to make more money?
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = MgrMoney))
+
+#Do you want to become a manager?
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = MgrWant))
+
+#Describe your tenure in your current role.
+ggplot(data = mydata) +
+  geom_bar(mapping = aes(x = LastHireDate))
+
+```
+
+#Continuous Variables
+
+```{r}
+#Compensation Total in USD
+
+ggplot(mydata, aes(x = ConvertedComp)) +
+        geom_histogram(binwidth = 20000)
+
+#Hours worked per week with mean
+
+ggplot(mydata, aes(x = WorkWeekHrs)) +
+        geom_histogram(binwidth = 1, breaks = seq(0, 100, 20), limits = c(-5, 100),expand = c(0, 0)) + geom_vline(aes(xintercept=mean(WorkWeekHrs, na.rm=T)),   # Ignore NA values for mean
+               color="red", linetype="dashed", size=1)
+
+
+```
+
+#Examination of Hypothesis
+
+```{r}
+#H1: The more competent a manager is perceived by the developer, the less likely they are to report that they are seeking other employment.
+
+
+ggplot(data = mydata) +
+  geom_count(mapping = aes(x = JobSeek, y = MgrIdiot)) +
+  theme(axis.text.x = element_text(angle = 90, hjust=1))
+
+#H2: Longer tenured developers will be less likely to report that they are seeking other employment.
+
+mydata %>% 
+  count(LastHireDate, JobSeek) %>%  
+  ggplot(mapping = aes(x = JobSeek, y = LastHireDate)) +
+    geom_tile(mapping = aes(fill = n)) +
+  theme(axis.text.x = element_text(angle = 90, hjust=1))
+
+#H3: Developers who are underpaid will be more likely to intend to seek other employment.
+
+ggplot(data = mydata, mapping = aes(x = JobSeek, y = ConvertedComp)) + 
+  ylim(0, 250000) +
+  geom_boxplot() + 
+  coord_flip()
+
+#H4:  Developers who do not work in their preferred work location are more likely to report that they are seeking other employment
+
+
+#H5: Developers who report that they work more than 40 weeks on average are more likely to report that they are seeking other employment.
+
+ggplot(data = mydata, mapping = aes(x = JobSeek, y = WorkWeekHrs)) + 
+  ylim(20, 60) +
+  geom_boxplot() + 
+  coord_flip()
+
+```
+
+
+
