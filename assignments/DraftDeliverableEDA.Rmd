@@ -1,14 +1,14 @@
 ---
 title: "Initial Data Exploration"
-author: "Patrick Voorhies"
-date: "11/2019.."
+author: "Patrick Voorhies & Nikki Tucker"
+date: "November and December 2019"
 output:
   html_document: default
   pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message=FALSE)
 ```
 
 
@@ -20,12 +20,15 @@ library(ggplot2)
 library(tidyverse)
 library(dplyr)
 
+
 #Load Data
 mydata = read.csv("survey_results_public.csv")
+
 ```
 
 
 ```{r}
+
 summary(mydata)
 
 ```
@@ -99,14 +102,14 @@ ggplot(mydata, aes(x = ConvertedComp)) +
 
 ggplot(mydata, aes(x = WorkWeekHrs)) +
         geom_histogram(binwidth = 1, breaks = seq(0, 100, 20), limits = c(-5, 100),expand = c(0, 0)) + geom_vline(aes(xintercept=mean(WorkWeekHrs, na.rm=T)),   # Ignore NA values for mean
-               color="red", linetype="dashed", size=1)
+               color="red", linetype="dashed", size=1) 
 
 
 ```
 
 #Examination of Hypothesis
 
-```{r}
+```{r fig.width=10,fig.height=11}
 #H1: The more competent a manager is perceived by the developer, the less likely they are to report that they are seeking other employment.
 
 
@@ -121,6 +124,7 @@ mydata %>%
   ggplot(mapping = aes(x = JobSeek, y = LastHireDate)) +
     geom_tile(mapping = aes(fill = n)) +
   theme(axis.text.x = element_text(angle = 90, hjust=1))
+  
 
 #H3: Developers who are underpaid will be more likely to intend to seek other employment.
 
@@ -132,6 +136,13 @@ ggplot(data = mydata, mapping = aes(x = JobSeek, y = ConvertedComp)) +
 #H4:  Developers who do not work in their preferred work location are more likely to report that they are seeking other employment
 
 
+
+ggplot(data = mydata) +
+  geom_count(mapping = aes(x = WorkLoc, y = JobSat)) +
+  theme(axis.text.x = element_text(angle = 90, hjust=1))
+
+
+
 #H5: Developers who report that they work more than 40 weeks on average are more likely to report that they are seeking other employment.
 
 ggplot(data = mydata, mapping = aes(x = JobSeek, y = WorkWeekHrs)) + 
@@ -141,5 +152,95 @@ ggplot(data = mydata, mapping = aes(x = JobSeek, y = WorkWeekHrs)) +
 
 ```
 
+# BONUS: Is pay related to Job Seeking Status?
+Developers who are paid well above the mean report that they are less likely to be seeking other employment.  
 
+```{r fig.width=10,fig.height=11}
+#Check Factor Status of Job Seek variable
+mydata$JobSeek.f <- factor(mydata$JobSeek)
+is.factor(mydata$JobSeek.f)
+
+#Convert Categorical Text to Factors 
+res <- model.matrix(~JobSeek, data = mydata)
+head(res[, ])
+
+model2 <- lm(ConvertedComp ~ JobSeek,
+             data = mydata)
+summary(model2)
+
+#The factors have been coded in this manner
+#0= I am actively looking for a job
+#1= I am not interested in new job opportunities
+#2= I'm not actively looking, but I am open to new opportunities
+
+#Plotting regression
+mod1<-lm(ConvertedComp~JobSeek,data=mydata) #outcome on left (Converted Comp), predictor on right (Job Seeking Status)
+summary(mod1)
+confint(mod1)
+
+g1<-ggplot(mydata, aes(x=JobSeek,y=ConvertedComp))+ 
+  geom_bar(stat="identity")+ #specify data and x and y
+           geom_point(shape=1)+ #specify points
+           geom_smooth(method=lm)+  #ask for lm line
+  theme(axis.text.x = element_text(angle = 90, hjust=1)) +
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+   scale_y_continuous(labels = scales::comma) +
+  ylim(10000, 200000)
+
+g1
+
+```
+
+
+# Algorithm 1:  Regression Prediction
+
+```{r}
+
+#Plotting a simple bivariate regression
+mod1<-lm(WorkWeekHrs~WorkWeekHrs,data=mydata) #outcome on left (ConvertedComp), predictor on right (WorkWeekHrs)
+summary(mod1)
+confint(mod1)
+
+g1<-ggplot(mydata, aes(x=WorkWeekHrs,y=ConvertedComp))+ #specify data and x and y
+           geom_point(shape=1)+ #specify points
+           geom_smooth(method=lm)+ #ask for lm line
+           ylim(0, 120000) +
+            xlim(0, 50)
+
+g1
+
+
+#Predictions
+
+fortyhrprediction<- 122663.86 + (40 * 112.26)
+fortyhrprediction 
+
+thirtyhourprediction<- 122663.86 + (30 * 112.26)
+thirtyhourprediction
+
+fiftyfivehourprediction<- 122663.86 + (55 * 112.26)
+fiftyfivehourprediction
+
+twentyhourprediction<- 122663.86 + (20 * 112.26)
+twentyhourprediction
+```
+
+Our Regression Predictions:
+[40 hour work week] 127154.3
+[30 hour work week] 126031.7
+[55 hour work week] 128838.2
+[20 hour work week] 124909.1
+
+# GOD HELP ME ON THE FOLLOWING:
+
+# Algorithm 2: Conditional Means
+
+```{r fig.width=10,fig.height=11}
+
+
+
+```
+
+
+# Cross-Validation (LN / Ch 10 (11)(Week 11))
 
