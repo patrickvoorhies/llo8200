@@ -10,80 +10,87 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #Package Installation
 library(tidyverse)
-library(modelr)
-library(caret)
-library(tictoc)
+library(plotly)
+library(shiny)
+library(leaflet)
+library(tigris)
+library(htmlwidgets)
 
 
 #Load the data
 load("pd.Rdata")
-
+load("pd_lab_explain.Rdata")
 ```
 
-#Question 1: Create a 10-fold cross validation 
+# Question 1: Text on Mouse Over Event
 
 ```{r}
+#Load the PD Data
 
-load("pd.Rdata")
-pd<-pd%>%
-  select(median_home_val,median_hh_inc,coll_grad_pc,homeown_rate,per_capita_inc)%>%
-  mutate_all(funs(as.numeric))%>%
-  mutate(home_rank=percent_rank(median_home_val))%>% 
-  tbl_df()
+##counties shapefile
+if(file.exists("cs.RData")==FALSE){
+cs<-counties(year=2010)
+save(cs,file="cs.RData")
+}else{
+  load("cs.Rdata")
+}
 
-## Define the model
-mod1_formula<-formula(home_rank~coll_grad_pc+
-                        per_capita_inc)
-## Run the model against all of the data
-basic.mod<-lm(mod1_formula,
-              data=pd); summary(basic.mod)
+#Loading in the Census FIPS codes.
+data("fips_codes")
+
+#I will use where I am spending Thanksgiving, Louisiana
+
+states_list<-c("LA")
+## Filter fips code to get just those states
+fips_codes<-fips_codes%>%group_by(state)%>%summarize(fips_code=first(state_code))
+fips_list<-fips_codes%>%filter(state%in%states_list)
+fips_list<-fips_list$fips_code
+
+## Switch names to lower case
+names(cs)<-tolower(names(cs))
+## subset to state list
+cs<-cs[cs$statefp%in%c(fips_list), ]## Just states we want
+##subset county dataset to be just college grads and county name
+pd_sub<-pd%>%select(fips,coll_grad_pc,median_hh_inc,county)%>%filter(grepl(states_list,county))
+## Join the two datasets
+cs<-geo_join(cs,pd_sub,"geoid10","fips")
+
+pal<-colorNumeric(
+  palette="YlGnBu",
+  domain=cs$coll_grad_pc
+)
+
+#Data Popup
+popup<-paste0(cs$county,
+              "<br>",
+              "Percent College Graduates= ",
+              cs$coll_grad_pc,
+              "<br",
+              "Median Household Income= ",
+              prettyNum(cs$median_hh_inc,big.mark=",")
+)
 
 
-pd_cf<-pd%>%
-crossv_kfold(10)
-pd_cf
+#Draw the Map
+map<-leaflet()%>%
+  addProviderTiles("CartoDB.Positron")%>%
+  addPolygons(data=cs,
+              fillColor=~pal(coll_grad_pc),
+              color="#b2aeae",
+              fillOpacity = .7,
+              weight=1,
+              smoothFactor = .2,
+              popup=popup
+              )%>%
+  addLegend(pal=pal,
+            values=cs$coll_grad_pc,
+            position="bottomright",
+            title="Percent College Graduates",
+            labFormat=labelFormat(suffix="%"))
+                
+  map
 
-tic()
-rmse_mod1<-pd_cf %>%
-mutate(train = map(train, as_tibble)) %>% ## Convert to tibbles 
-  mutate(model = map(train, ~ lm(mod1_formula,
-data = .))) %>%
-mutate(rmse = map2_dbl(model, test, rmse)) %>% ## apply model, get rmse
-  select(.id, rmse) ## pull just id and rmse
-toc()
-
-summary(rmse_mod1$rmse)
-gg<-ggplot(rmse_mod1,aes(rmse)) 
-gg<-gg+geom_density()
-gg
+  saveWidget(widget=map,file="county_map.html")
 
 ```
-
-
-#Question 2: Using a random partition, create 100 separate cross validations 
-
-```{r}
-pd_cv<-pd%>%
-  crossv_mc(n=1000,test=.2) 
-pd_cv
-
-tic()
-mod1_rmse_cv<-pd_cv %>%
-mutate(train = map(train, as_tibble)) %>% ## Convert to tibbles 
-  mutate(model = map(train, ~ lm(mod1_formula, data = .)))%>% 
-  mutate(rmse = map2_dbl(model, test, rmse))%>%
-select(.id, rmse) ## pull just id and rmse
-mod1_rmse_cv 
-toc()
-
-summary(mod1_rmse_cv$rmse)
-
-gg<-ggplot(mod1_rmse_cv,aes(rmse))
-
-gg<-gg+geom_density(bins=50,fill="blue",alpha=.2) 
-
-gg
-
-```
-
 
